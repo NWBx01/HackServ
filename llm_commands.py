@@ -19,7 +19,7 @@ class Bot_Commands:
         self.generator = LLM_Proxy()
 
     def botCommands(sendmsg, botObject, name, prompt, maxTokens, maxLines, sourceChannel, server):
-        print("Checking for Bot Command")
+        #print("Checking for Bot Command")
         message = ""
         messages = []
         
@@ -32,7 +32,7 @@ class Bot_Commands:
             return messages
 
         elif (prompt.lower() == "!reset"):
-            print("Bot Command: " + name + " Reset")
+            #print("Bot Command: " + name + " Reset")
             botObject.prompt(sendmsg, name, prompt, maxTokens, maxLines, "", "reset", sourceChannel, server)
 
             if (name == "2[Otaku-chan]"):
@@ -71,7 +71,7 @@ class Bot_Commands:
         
     
         elif (prompt.lower() == "!tokens"):
-            print("Bot Command: " + name + " Tokens")
+            #print("Bot Command: " + name + " Tokens")
             botObject.toggleTokens()
             
             if (botObject.returnTokens() == True):
@@ -85,7 +85,7 @@ class Bot_Commands:
             return messages
             
         elif (prompt.lower() == "!model"):
-            print("Bot Command: " + name + " Model")
+            #print("Bot Command: " + name + " Model")
             botObject.toggleModel()
             
             if (botObject.returnModel() == True):
@@ -99,7 +99,7 @@ class Bot_Commands:
             return messages
             
         elif (prompt.lower() == "!debug"):
-            print("Bot Command: " + name + " Debug")
+            #print("Bot Command: " + name + " Debug")
             botObject.toggleDebug()
             
             if (botObject.returnDebug() == True):
@@ -129,7 +129,7 @@ class Bot_Commands:
             return messages
         
         elif (prompt.lower() == "!undo"):
-            print("Bot Command: " + name + " Undo")
+            #print("Bot Command: " + name + " Undo")
             botObject.prompt(sendmsg, name, prompt, maxTokens, maxLines, "", "undo", sourceChannel, server)
             if (server == "irc.sageru.org"):
                 name = name + ": "
@@ -139,7 +139,7 @@ class Bot_Commands:
             return messages
         
         elif ((prompt.lower() == "!regen") or (prompt.lower() == "!regenerate")):
-            print("Bot Command: " + name + " Regen")
+            #print("Bot Command: " + name + " Regen")
 
             messages = botObject.prompt(sendmsg, name, "", maxTokens, maxLines, "", "regen", sourceChannel, server)
 
@@ -154,7 +154,7 @@ class Bot_Commands:
             return messages
         
         elif ((prompt.lower() == "!continue") or (prompt.lower() == "!cont")):
-            print("Bot Command: " + name + " Continue")
+            #print("Bot Command: " + name + " Continue")
 
             messages = botObject.prompt(sendmsg, name, "", maxTokens, maxLines, "", "continue", sourceChannel, server)
 
@@ -166,7 +166,7 @@ class Bot_Commands:
             return messages
         
         elif ((prompt.lower() == "!resume")):
-            print("Bot Command: " + name + " Resume")
+            #print("Bot Command: " + name + " Resume")
             messages = botObject.returnTruncatedPrompt()
             if messages == "":
                 messages = []
@@ -185,7 +185,7 @@ class Bot_Commands:
             return messages
         
         elif (prompt.lower().find('!image') != -1):
-            print("Bot Command: " + name + " Image")
+            #print("Bot Command: " + name + " Image")
             if (server != "irc.rizon.net") and (server != "irc.sageru.org"):
                 if (server == "irc.sageru.org"):
                     message = name + ": 7Sending images is only supported in #chatgpt at the moment"
@@ -255,24 +255,29 @@ class Bot_Commands:
             
         
         elif ((prompt.lower() == "!help") or (prompt.lower() == "!commands")):
-            print("Bot Command: " + name + " Help")
+            #print("Bot Command: " + name + " Help")
+            if (server == "irc.sageru.org"):
+                name = name + ": "
+            else:
+                name = ""
             messages.append(name + "7The following is a list of commands and their descriptions:")
-            messages.append("!help - Show this help screen")
-            messages.append("!image [URL] [message] - Sends an image")
-            messages.append("!system [message] - Sends a system message")
-            messages.append("!continue - Continues generating the last response from where it ended")
-            messages.append("!resume - Displays the last response, beginning from where it was truncated")
-            messages.append("!regen - Regenerate the last response")
-            messages.append("!undo - Undos the previous two messages")
-            messages.append("!reset - Creates a new chat and resets options")
-            messages.append("!tokens - Shows token context size utilization")
-            messages.append("!model - Shows the model being used to generate a response")
-            messages.append("!debug - Show additional debug information")
+            messages.append("7!help - Show this help screen")
+            messages.append("7!image [URL] [message] - Sends an image")
+            messages.append("7!system [message] - Sends a system message")
+            messages.append("7!continue - Continues generating the last response from where it ended")
+            messages.append("7!resume - Displays the last response, beginning from where it was truncated")
+            messages.append("7!regen - Regenerate the last response")
+            messages.append("7!undo - Undos the previous two messages")
+            messages.append("7!reset - Creates a new chat and resets options")
+            messages.append("7!tokens - Shows token context size utilization")
+            messages.append("7!model - Shows the model being used to generate a response")
+            messages.append("7!debug - Show additional debug information")
+            messages.append("7!uptime - Show uptime")
 
             return messages
         
         elif ((prompt.lower().find('!sys') != -1) or (prompt.lower().find('!system') != -1)):
-            print("Bot Command: " + name + " System Message")
+            #print("Bot Command: " + name + " System Message")
             if prompt.find(' ') != -1:
                 prompt = prompt.split(' ', 1)[1]
             botObject.prompt(sendmsg, name, prompt, maxTokens, maxLines, "", "system", sourceChannel, server)
@@ -283,8 +288,72 @@ class Bot_Commands:
 
             return messages
         
+        elif ((prompt.lower() == "!uptime")):
+            #print("Bot Command: " + name + " Uptime")
+            message = "7Uptime: "
+            if (server == "irc.sageru.org"):
+                name = name + ": "
+
+            uptime = time.time() - starttime
+            seconds = uptime
+
+            years = int(seconds / (365*24*60*60))
+            if (years != 0):
+                message += str(years) + " year"
+                if years != 1:
+                    message += "s"
+                message += ", "
+
+            seconds -= years * (365*24*60*60)
+
+            months = int(seconds / (30*24*60*60))
+            if (months != 0):
+                message += str(months) + " month"
+                if months != 1:
+                    message += "s"
+                message += ", "
+
+            seconds -= months * (30*24*60*60)
+
+            days = int(seconds / (24*60*60))
+            if (days != 0):
+                message += str(days) + " day"
+                if days != 1:
+                    message += "s"
+                message += ", "
+
+            seconds -= days * (24*60*60)
+
+            hours = int(seconds / (60*60))
+            if (hours != 0):
+                message += str(hours) + " hour"
+                if hours != 1:
+                    message += "s"
+                message += ", "
+
+            seconds -= hours * (60*60)
+
+            minutes = int(seconds / 60)
+            if (minutes != 0):
+                message += str(minutes) + " minute"
+                if minutes != 1:
+                    message += "s"
+                message += ", "
+
+            seconds -= minutes * 60
+
+            if (seconds != 0):
+                message += str(int(seconds)) + " second"
+                if seconds != 1:
+                    message += "s"
+
+            messages = []
+            messages.append(name + message)
+
+            return messages
+
         else:
-            print("Bot Command: " + name + " Message")
+            #print("Bot Command: " + name + " Message")
             messages = botObject.prompt(sendmsg, name, prompt, maxTokens, maxLines, "", "", sourceChannel, server)
 
             return messages

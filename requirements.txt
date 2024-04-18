@@ -1,2 +1,5 @@
 python-nmap==0.6.4
 python-pynput==1.7.6
+requests
+playwright
+cf_clearance

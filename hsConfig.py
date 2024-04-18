@@ -25,6 +25,7 @@
 #
 config_version = 1.2
 import random
+import time
 from requests import get
 ip = get('https://api.ipify.org').text
 #################################################
@@ -36,7 +37,7 @@ selfSignedCerts = False # Allow self-signed certs or not. Not recommended unless
 useservpass = False # Use a password to connect to IRC Server. (True or False)
 usesasl = False # Authenticate using SASL. (True or False)
 enableshell = False # Enable Shell commands. (True or False)
-
+starttime = time.time()
 
 #################################################
 ############# Bot Settings ######################
