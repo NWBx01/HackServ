@@ -504,6 +504,7 @@ class LLM_Proxy:
         print("Google Gemini Wait Time: " + str(google_gemini_wait_time))
         print("Google Gemini Keys: " + str(google_gemini_keys ))
         
+        openai_gpt4o_wait_threshold = 120 # Average wait ~20 seconds
         openai_gpt4_turbo_wait_threshold = 120 # Average wait ~20 seconds
         azure_gpt4_turbo_wait_threshold = 120 # Average wait ~20 seconds
         openai_gpt4_32k_wait_threshold = 60 # Average wait ~20 seconds
