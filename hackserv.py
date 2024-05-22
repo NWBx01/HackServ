@@ -111,9 +111,13 @@ def connect(): # Connect to the IRC network.
             ircsend("NICK "+ botnick) # Assign the nick to the bot.
             connected = True
             #main()
-            threading.Thread(target=irc_receive).start()
-            threading.Thread(target=ping_server).start()
-            threading.Thread(target=main).start()
+            try:
+                threading.Thread(target=irc_receive).start()
+                threading.Thread(target=ping_server).start()
+                threading.Thread(target=main).start()
+            except:
+                connected = False
+                reconnect()
         except Exception as iconnex: # If you can't connect, wait 10 seconds and try again.
             if debugmode: # If debugmode is True, msgs will print to screen.
                 print("Exception: " + str(iconnex))
@@ -148,9 +152,13 @@ def reconnect(): # Reconnect to the IRC network.
             ircsend("NICK "+ botnick) # Assign the nick to the bot.
             connected = True
             #main()
-            threading.Thread(target=irc_receive).start()
-            threading.Thread(target=ping_server).start()
-            threading.Thread(target=main).start()
+            try:
+                threading.Thread(target=irc_receive).start()
+                threading.Thread(target=ping_server).start()
+                threading.Thread(target=main).start()
+            except:
+                connected = False
+                reconnect()
         except Exception as irconnex: # If you can't connect, wait 10 seconds and try again.
             if debugmode: # If debugmode is True, msgs will print to screen.
                 print("Exception: " + str(irconnex))

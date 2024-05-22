@@ -323,6 +323,12 @@ class LLM_Proxy:
 
             openai_endpoint_url = primary_proxy_service_info['endpoints']['openai']
             try:
+                openai_gpt4o_turbo_wait_time = WaitTimeInSeconds(primary_proxy_service_info['gpt4o']['estimatedQueueTime'])
+                openai_gpt4o_turbo_keys = primary_proxy_service_info['gpt4o']['activeKeys']
+            except:
+                openai_gpt4o_turbo_wait_time = 0
+                openai_gpt4o_turbo_keys = 0
+            try:
                 openai_gpt4_turbo_wait_time = WaitTimeInSeconds(primary_proxy_service_info['gpt4-turbo']['estimatedQueueTime'])
                 openai_gpt4_turbo_keys = primary_proxy_service_info['gpt4-turbo']['activeKeys']
             except:
@@ -378,6 +384,8 @@ class LLM_Proxy:
                 google_gemini_keys  = 0
         except:
             print("Primary Proxy Down?")
+            openai_gpt4o_turbo_wait_time = 0
+            openai_gpt4o_turbo_keys = 0
             openai_gpt4_turbo_wait_time = 0
             openai_gpt4_turbo_keys = 0
             openai_gpt4_32k_wait_time = 0
@@ -467,6 +475,7 @@ class LLM_Proxy:
                 google_gemini_keys  = 0
                 skip_all == True
 
+        openai_gpt4o_streaming_response = False
         openai_gpt4_turbo_streaming_response = False
         azure_gpt4_turbo_streaming_response = False
         openai_gpt4_32k_streaming_response = False
@@ -476,6 +485,8 @@ class LLM_Proxy:
         openai_gpt3_5_turbo_streaming_response = False
         google_gemini_streaming_response = False
         
+        print("OpenAI GPT-4o Wait Time: " + str(openai_gpt4o_wait_time))
+        print("OpenAI GPT-4o Keys: " + str(openai_gpt4o_keys))
         print("OpenAI GPT-4-Turbo Wait Time: " + str(openai_gpt4_turbo_wait_time))
         print("OpenAI GPT-4-Turbo Keys: " + str(openai_gpt4_turbo_keys))
         print("Azure GPT-4-Turbo Wait Time: " + str(azure_gpt4_turbo_wait_time))
@@ -512,6 +523,7 @@ class LLM_Proxy:
         google_gemini_skip_reason = ""
 
         if ((filePathUpload == "") and (skip_all == False)):
+            openai_gpt4o_skip = False
             openai_gpt4_turbo_skip = False
             azure_gpt4_turbo_skip = False
             openai_gpt4_32k_skip = False
@@ -521,6 +533,7 @@ class LLM_Proxy:
             openai_gpt3_5_turbo_skip = False
             google_gemini_skip = False
         elif ((filePathUpload != "") and (skip_all == False)):
+            openai_gpt4o_skip = False
             openai_gpt4_turbo_skip = False
             azure_gpt4_turbo_skip = False
             openai_gpt4_32k_skip = True
@@ -537,6 +550,7 @@ class LLM_Proxy:
 
             aws_claude_sonnet_wait_threshold = 1000
 
+            openai_gpt4o_skip_reason = ""
             openai_gpt4_turbo_skip_reason = ""
             openai_gpt4_32k_skip_reason = "OpenAI GPT-4-32K does not support image uploads."
             azure_gpt4_32k_skip_reason = "Azure GPT-4-32K does not support image uploads."
@@ -577,12 +591,22 @@ class LLM_Proxy:
         if (openai_gpt4_turbo_keys == 0):
             openai_gpt4_turbo_skip = True
             openai_gpt4_turbo_skip_reason = "OpenAI GPT-4-Turbo has no available keys"
+            openai_gpt4o_wait_threshold = 1000
+        if (openai_gpt4o_keys == 0):
+            openai_gpt4o_skip = True
+            openai_gpt4o_skip_reason = "OpenAI GPT-4o has no available keys"
 
         # Check if there are any issues with the model. If so, set a flag to skip it.
         # This is particularly important if there is an excessively long wait time. If we had not skipped the model and merely aborted it due to timeout, we would still be queued for that prompt
         # Meaning, we would be required to still wait the excessive wait time, regardless. Skipping the model entirely means we can skip this wait and just try a different model.
         # If there's no keys available, then we should obviously skip the model.
         
+        if (openai_gpt4o_wait_time > openai_gpt4o_wait_threshold):
+            openai_gpt4o_skip = True
+            openai_gpt4o_skip_reason = "OpenAI GPT-4-Turbo wait time (" + str(openai_gpt4o_wait_time) + ") greater than wait threshold (" + str(openai_gpt4o_wait_threshold) + ")"
+        else:
+            openai_gpt4o_wait_threshold += openai_gpt4o_wait_time
+
         if (openai_gpt4_turbo_wait_time > openai_gpt4_turbo_wait_threshold):
             openai_gpt4_turbo_skip = True
             openai_gpt4_turbo_skip_reason = "OpenAI GPT-4-Turbo wait time (" + str(openai_gpt4_turbo_wait_time) + ") greater than wait threshold (" + str(openai_gpt4_turbo_wait_threshold) + ")"
@@ -632,7 +656,7 @@ class LLM_Proxy:
             google_gemini_wait_threshold += google_gemini_wait_time
 
            
-        if (skip_all or ((openai_gpt4_turbo_skip == True) and (azure_gpt4_turbo_skip == True) and (openai_gpt4_32k_skip == True) and (azure_gpt4_32k_skip == True) and (aws_claude_sonnet_skip == True) and (aws_claude_skip == True) and (openai_gpt3_5_turbo_skip == True) and (google_gemini_skip == True))):
+        if (skip_all or ((openai_gpt4o_skip == True) and (openai_gpt4_turbo_skip == True) and (azure_gpt4_turbo_skip == True) and (openai_gpt4_32k_skip == True) and (azure_gpt4_32k_skip == True) and (aws_claude_sonnet_skip == True) and (aws_claude_skip == True) and (openai_gpt3_5_turbo_skip == True) and (google_gemini_skip == True))):
             print("Skip all. No keys available.")
             skip_all = True
             
@@ -749,15 +773,12 @@ class LLM_Proxy:
                         file_chooser.set_files(filePathUpload)
 
                     try:
-                        if (openai_gpt4_turbo_skip == True):
-                            print(openai_gpt4_turbo_skip_reason)
-                            raise ValueError(openai_gpt4_turbo_skip_reason)
+                        if (openai_gpt4o_skip == True):
+                            print(openai_gpt4o_skip_reason)
+                            raise ValueError(openai_gpt4o_skip_reason)
                         else:
-                            if (filePathUpload == ""):
-                                response_list = self.proxyPrompt(sendmsg, sourceChannel, browser, page, "custom", openai_endpoint_url, proxy_key, message, 8000, name, "OpenAI", "gpt-4-turbo", "OpenAI-GPT4-Turbo", "OpenAI GPT4 Turbo", openai_gpt4_turbo_wait_threshold, openai_gpt4_turbo_streaming_response, filePathUpload, special)
-                            else:
-                                response_list = self.proxyPrompt(sendmsg, sourceChannel, browser, page, "custom", openai_endpoint_url, proxy_key, message, 8000, name, "OpenAI", "gpt-4-vision-preview", "OpenAI-GPT4-Vision", "OpenAI GPT4 Vision", openai_gpt4_turbo_wait_threshold, openai_gpt4_turbo_streaming_response, filePathUpload, special)
-
+                            response_list = self.proxyPrompt(sendmsg, sourceChannel, browser, page, "custom", openai_endpoint_url, proxy_key, message, 8000, name, "OpenAI", "gpt-4o", "OpenAI-GPT4o", "OpenAI GPT4o", openai_gpt4o_wait_threshold, openai_gpt4o_streaming_response, filePathUpload, special)
+                            
                             encountered_error = response_list[0]
                             response_info = response_list[1]
                             temp_response = response_list[2]
@@ -769,7 +790,7 @@ class LLM_Proxy:
                             if (encountered_error == True):
                                 raise ValueError()
                     except:
-                        if (openai_gpt4_turbo_skip == False):
+                        if (openai_gpt4o_skip == False):
                             try:
                                 page.get_by_title("Abort request").locator("i").click(timeout=100)
                                 print("Request aborted due to timeout")
@@ -783,14 +804,14 @@ class LLM_Proxy:
                         encountered_error = False
 
                         try:
-                            if (azure_gpt4_turbo_skip == True):
-                                print(azure_gpt4_turbo_skip_reason)
-                                raise ValueError(azure_gpt4_turbo_skip_reason)
+                            if (openai_gpt4_turbo_skip == True):
+                                print(openai_gpt4_turbo_skip_reason)
+                                raise ValueError(openai_gpt4_turbo_skip_reason)
                             else:
                                 if (filePathUpload == ""):
-                                    response_list = self.proxyPrompt(sendmsg, sourceChannel, browser, page, "custom", azure_endpoint_url, proxy_key, message, 8000, name, "Azure", "gpt-4-turbo", "Azure-GPT4-Turbo", "Azure GPT4 Turbo", azure_gpt4_turbo_wait_threshold, azure_gpt4_turbo_streaming_response, filePathUpload, special)
+                                    response_list = self.proxyPrompt(sendmsg, sourceChannel, browser, page, "custom", openai_endpoint_url, proxy_key, message, 8000, name, "OpenAI", "gpt-4-turbo", "OpenAI-GPT4-Turbo", "OpenAI GPT4 Turbo", openai_gpt4_turbo_wait_threshold, openai_gpt4_turbo_streaming_response, filePathUpload, special)
                                 else:
-                                    response_list = self.proxyPrompt(sendmsg, sourceChannel, browser, page, "custom", azure_endpoint_url, proxy_key, message, 8000, name, "Azure", "gpt-4-vision-preview", "Azure-GPT4-Vision", "Azure GPT4 Vision", azure_gpt4_turbo_wait_threshold, azure_gpt4_turbo_streaming_response, filePathUpload, special)
+                                    response_list = self.proxyPrompt(sendmsg, sourceChannel, browser, page, "custom", openai_endpoint_url, proxy_key, message, 8000, name, "OpenAI", "gpt-4-vision-preview", "OpenAI-GPT4-Vision", "OpenAI GPT4 Vision", openai_gpt4_turbo_wait_threshold, openai_gpt4_turbo_streaming_response, filePathUpload, special)
 
                                 encountered_error = response_list[0]
                                 response_info = response_list[1]
@@ -803,7 +824,7 @@ class LLM_Proxy:
                                 if (encountered_error == True):
                                     raise ValueError()
                         except:
-                            if (azure_gpt4_turbo_skip == False):
+                            if (openai_gpt4_turbo_skip == False):
                                 try:
                                     page.get_by_title("Abort request").locator("i").click(timeout=100)
                                     print("Request aborted due to timeout")
@@ -817,11 +838,14 @@ class LLM_Proxy:
                             encountered_error = False
 
                             try:
-                                if (openai_gpt4_32k_skip == True):
-                                    print(openai_gpt4_32k_skip_reason)
-                                    raise ValueError(openai_gpt4_32k_skip_reason)
+                                if (azure_gpt4_turbo_skip == True):
+                                    print(azure_gpt4_turbo_skip_reason)
+                                    raise ValueError(azure_gpt4_turbo_skip_reason)
                                 else:
-                                    response_list = self.proxyPrompt(sendmsg, sourceChannel, browser, page, "custom", openai_endpoint_url, proxy_key, message, 8000, name, "OpenAI", "gpt-4-32k", "OpenAI-GPT4-32K", "OpenAI GPT4-32K", openai_gpt4_32k_wait_threshold, openai_gpt4_32k_streaming_response, filePathUpload, special)
+                                    if (filePathUpload == ""):
+                                        response_list = self.proxyPrompt(sendmsg, sourceChannel, browser, page, "custom", azure_endpoint_url, proxy_key, message, 8000, name, "Azure", "gpt-4-turbo", "Azure-GPT4-Turbo", "Azure GPT4 Turbo", azure_gpt4_turbo_wait_threshold, azure_gpt4_turbo_streaming_response, filePathUpload, special)
+                                    else:
+                                        response_list = self.proxyPrompt(sendmsg, sourceChannel, browser, page, "custom", azure_endpoint_url, proxy_key, message, 8000, name, "Azure", "gpt-4-vision-preview", "Azure-GPT4-Vision", "Azure GPT4 Vision", azure_gpt4_turbo_wait_threshold, azure_gpt4_turbo_streaming_response, filePathUpload, special)
 
                                     encountered_error = response_list[0]
                                     response_info = response_list[1]
@@ -834,7 +858,7 @@ class LLM_Proxy:
                                     if (encountered_error == True):
                                         raise ValueError()
                             except:
-                                if (openai_gpt4_32k_skip == False):
+                                if (azure_gpt4_turbo_skip == False):
                                     try:
                                         page.get_by_title("Abort request").locator("i").click(timeout=100)
                                         print("Request aborted due to timeout")
@@ -846,13 +870,13 @@ class LLM_Proxy:
                                 else:
                                     time.sleep(0)
                                 encountered_error = False
-                            
+
                                 try:
-                                    if (azure_gpt4_32k_skip == True):
-                                        print(azure_gpt4_32k_skip_reason)
-                                        raise ValueError(azure_gpt4_32k_skip_reason)
+                                    if (openai_gpt4_32k_skip == True):
+                                        print(openai_gpt4_32k_skip_reason)
+                                        raise ValueError(openai_gpt4_32k_skip_reason)
                                     else:
-                                        response_list = self.proxyPrompt(sendmsg, sourceChannel, browser, page, "custom", azure_endpoint_url, proxy_key, message, 8000, name, "Azure", "gpt-4-32k", "Azure-GPT4-32K", "Azure GPT4-32K", azure_gpt4_32k_wait_threshold, azure_gpt4_32k_streaming_response, filePathUpload, special)
+                                        response_list = self.proxyPrompt(sendmsg, sourceChannel, browser, page, "custom", openai_endpoint_url, proxy_key, message, 8000, name, "OpenAI", "gpt-4-32k", "OpenAI-GPT4-32K", "OpenAI GPT4-32K", openai_gpt4_32k_wait_threshold, openai_gpt4_32k_streaming_response, filePathUpload, special)
 
                                         encountered_error = response_list[0]
                                         response_info = response_list[1]
@@ -865,7 +889,7 @@ class LLM_Proxy:
                                         if (encountered_error == True):
                                             raise ValueError()
                                 except:
-                                    if (azure_gpt4_32k_skip == False):
+                                    if (openai_gpt4_32k_skip == False):
                                         try:
                                             page.get_by_title("Abort request").locator("i").click(timeout=100)
                                             print("Request aborted due to timeout")
@@ -879,11 +903,11 @@ class LLM_Proxy:
                                     encountered_error = False
                                 
                                     try:
-                                        if (aws_claude_sonnet_skip == True):
-                                            print(aws_claude_sonnet_skip_reason)
-                                            raise ValueError(aws_claude_sonnet_skip_reason)
+                                        if (azure_gpt4_32k_skip == True):
+                                            print(azure_gpt4_32k_skip_reason)
+                                            raise ValueError(azure_gpt4_32k_skip_reason)
                                         else:
-                                            response_list = self.proxyPrompt(sendmsg, sourceChannel, browser, page, "claude", aws_endpoint_url, proxy_key, message, 8000, name, "AWS", "claude-3-sonnet-20240229", "Claude-3-Sonnet", "AWS Claude Sonnet", aws_claude_sonnet_wait_threshold, aws_claude_sonnet_streaming_response, filePathUpload, special)
+                                            response_list = self.proxyPrompt(sendmsg, sourceChannel, browser, page, "custom", azure_endpoint_url, proxy_key, message, 8000, name, "Azure", "gpt-4-32k", "Azure-GPT4-32K", "Azure GPT4-32K", azure_gpt4_32k_wait_threshold, azure_gpt4_32k_streaming_response, filePathUpload, special)
 
                                             encountered_error = response_list[0]
                                             response_info = response_list[1]
@@ -896,7 +920,7 @@ class LLM_Proxy:
                                             if (encountered_error == True):
                                                 raise ValueError()
                                     except:
-                                        if (aws_claude_sonnet_skip == False):
+                                        if (azure_gpt4_32k_skip == False):
                                             try:
                                                 page.get_by_title("Abort request").locator("i").click(timeout=100)
                                                 print("Request aborted due to timeout")
@@ -910,11 +934,11 @@ class LLM_Proxy:
                                         encountered_error = False
                                     
                                         try:
-                                            if (aws_claude_skip == True):
-                                                print(aws_claude_skip_reason)
-                                                raise ValueError(aws_claude_skip_reason)
+                                            if (aws_claude_sonnet_skip == True):
+                                                print(aws_claude_sonnet_skip_reason)
+                                                raise ValueError(aws_claude_sonnet_skip_reason)
                                             else:
-                                                response_list = self.proxyPrompt(sendmsg, sourceChannel, browser, page, "custom", aws_endpoint_url, proxy_key, message, 8000, name, "AWS", "anthropic.claude-v2:1", "Claude-2.1", "AWS Claude 2.1", aws_claude_wait_threshold, aws_claude_streaming_response, filePathUpload, special)
+                                                response_list = self.proxyPrompt(sendmsg, sourceChannel, browser, page, "claude", aws_endpoint_url, proxy_key, message, 8000, name, "AWS", "claude-3-sonnet-20240229", "Claude-3-Sonnet", "AWS Claude Sonnet", aws_claude_sonnet_wait_threshold, aws_claude_sonnet_streaming_response, filePathUpload, special)
 
                                                 encountered_error = response_list[0]
                                                 response_info = response_list[1]
@@ -927,7 +951,7 @@ class LLM_Proxy:
                                                 if (encountered_error == True):
                                                     raise ValueError()
                                         except:
-                                            if (aws_claude_skip == False):
+                                            if (aws_claude_sonnet_skip == False):
                                                 try:
                                                     page.get_by_title("Abort request").locator("i").click(timeout=100)
                                                     print("Request aborted due to timeout")
@@ -939,13 +963,13 @@ class LLM_Proxy:
                                             else:
                                                 time.sleep(0)
                                             encountered_error = False
-                                    
+                                        
                                             try:
-                                                if (openai_gpt3_5_turbo_skip == True):
-                                                    print(openai_gpt3_5_turbo_skip_reason)
-                                                    raise ValueError(openai_gpt3_5_turbo_skip_reason)
+                                                if (aws_claude_skip == True):
+                                                    print(aws_claude_skip_reason)
+                                                    raise ValueError(aws_claude_skip_reason)
                                                 else:
-                                                    response_list = self.proxyPrompt(sendmsg, sourceChannel, browser, page, "custom", openai_endpoint_url, proxy_key, message, 8000, name, "OpenAI", "gpt-3.5-turbo-16k", "GPT-3.5-Turbo-16K", "OpenAI GPT-3.5-Turbo-16K", openai_gpt3_5_turbo_wait_threshold, openai_gpt3_5_turbo_streaming_response, filePathUpload, special)
+                                                    response_list = self.proxyPrompt(sendmsg, sourceChannel, browser, page, "custom", aws_endpoint_url, proxy_key, message, 8000, name, "AWS", "anthropic.claude-v2:1", "Claude-2.1", "AWS Claude 2.1", aws_claude_wait_threshold, aws_claude_streaming_response, filePathUpload, special)
 
                                                     encountered_error = response_list[0]
                                                     response_info = response_list[1]
@@ -958,7 +982,7 @@ class LLM_Proxy:
                                                     if (encountered_error == True):
                                                         raise ValueError()
                                             except:
-                                                if (openai_gpt3_5_turbo_skip == False):
+                                                if (aws_claude_skip == False):
                                                     try:
                                                         page.get_by_title("Abort request").locator("i").click(timeout=100)
                                                         print("Request aborted due to timeout")
@@ -970,13 +994,13 @@ class LLM_Proxy:
                                                 else:
                                                     time.sleep(0)
                                                 encountered_error = False
-                                    
+                                        
                                                 try:
-                                                    if (google_gemini_skip == True):
-                                                        print(google_gemini_skip_reason)
-                                                        raise ValueError(google_gemini_skip_reason)
+                                                    if (openai_gpt3_5_turbo_skip == True):
+                                                        print(openai_gpt3_5_turbo_skip_reason)
+                                                        raise ValueError(openai_gpt3_5_turbo_skip_reason)
                                                     else:
-                                                        response_list = self.proxyPrompt(sendmsg, sourceChannel, browser, page, "custom", openai_endpoint_url, proxy_key, message, 8000, name, "Google", "gemini-pro", "Gemini-Pro", "Google Gemini Pro", google_gemini_wait_threshold, google_gemini_streaming_response, filePathUpload, special)
+                                                        response_list = self.proxyPrompt(sendmsg, sourceChannel, browser, page, "custom", openai_endpoint_url, proxy_key, message, 8000, name, "OpenAI", "gpt-3.5-turbo-16k", "GPT-3.5-Turbo-16K", "OpenAI GPT-3.5-Turbo-16K", openai_gpt3_5_turbo_wait_threshold, openai_gpt3_5_turbo_streaming_response, filePathUpload, special)
 
                                                         encountered_error = response_list[0]
                                                         response_info = response_list[1]
@@ -989,7 +1013,38 @@ class LLM_Proxy:
                                                         if (encountered_error == True):
                                                             raise ValueError()
                                                 except:
-                                                    pass
+                                                    if (openai_gpt3_5_turbo_skip == False):
+                                                        try:
+                                                            page.get_by_title("Abort request").locator("i").click(timeout=100)
+                                                            print("Request aborted due to timeout")
+                                                        except:
+                                                            print("Encountered an error getting a response")
+                                                            time.sleep(5)
+                                                    elif (encountered_error == True):
+                                                        time.sleep(5)
+                                                    else:
+                                                        time.sleep(0)
+                                                    encountered_error = False
+                                        
+                                                    try:
+                                                        if (google_gemini_skip == True):
+                                                            print(google_gemini_skip_reason)
+                                                            raise ValueError(google_gemini_skip_reason)
+                                                        else:
+                                                            response_list = self.proxyPrompt(sendmsg, sourceChannel, browser, page, "custom", openai_endpoint_url, proxy_key, message, 8000, name, "Google", "gemini-pro", "Gemini-Pro", "Google Gemini Pro", google_gemini_wait_threshold, google_gemini_streaming_response, filePathUpload, special)
+
+                                                            encountered_error = response_list[0]
+                                                            response_info = response_list[1]
+                                                            temp_response = response_list[2]
+                                                            alternative_message_save = response_list[3]
+                                                            response_message = response_list[4]
+                                                            if (response_list[5] != ""):
+                                                                message_prefix = response_list[5]
+
+                                                            if (encountered_error == True):
+                                                                raise ValueError()
+                                                    except:
+                                                        pass
 
                         
                 
