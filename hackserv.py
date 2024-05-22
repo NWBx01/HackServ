@@ -111,13 +111,9 @@ def connect(): # Connect to the IRC network.
             ircsend("NICK "+ botnick) # Assign the nick to the bot.
             connected = True
             #main()
-            try:
-                threading.Thread(target=irc_receive).start()
-                threading.Thread(target=ping_server).start()
-                threading.Thread(target=main).start()
-            except:
-                connected = False
-                reconnect()
+            threading.Thread(target=irc_receive).start()
+            threading.Thread(target=ping_server).start()
+            threading.Thread(target=main).start()
         except Exception as iconnex: # If you can't connect, wait 10 seconds and try again.
             if debugmode: # If debugmode is True, msgs will print to screen.
                 print("Exception: " + str(iconnex))
@@ -152,13 +148,9 @@ def reconnect(): # Reconnect to the IRC network.
             ircsend("NICK "+ botnick) # Assign the nick to the bot.
             connected = True
             #main()
-            try:
-                threading.Thread(target=irc_receive).start()
-                threading.Thread(target=ping_server).start()
-                threading.Thread(target=main).start()
-            except:
-                connected = False
-                reconnect()
+            threading.Thread(target=irc_receive).start()
+            threading.Thread(target=ping_server).start()
+            threading.Thread(target=main).start()
         except Exception as irconnex: # If you can't connect, wait 10 seconds and try again.
             if debugmode: # If debugmode is True, msgs will print to screen.
                 print("Exception: " + str(irconnex))
@@ -243,10 +235,14 @@ def uptime(): # Used to get current uptime for .uptime command
 def ping_server():
     global connected
     global lastpingsent
-    while connected:
-        if (time.time() - lastpingsent) >= 15:
-            sendping()
-            lastpingsent = time.time()
+    try:
+        while connected:
+            if (time.time() - lastpingsent) >= 15:
+                sendping()
+                lastpingsent = time.time()
+    except:
+        connected = False
+        reconnect()
 
 # Receives IRC messages and puts them into a message queue.
 def irc_receive():
