@@ -323,11 +323,11 @@ class LLM_Proxy:
 
             openai_endpoint_url = primary_proxy_service_info['endpoints']['openai']
             try:
-                openai_gpt4o_turbo_wait_time = WaitTimeInSeconds(primary_proxy_service_info['gpt4o']['estimatedQueueTime'])
-                openai_gpt4o_turbo_keys = primary_proxy_service_info['gpt4o']['activeKeys']
+                openai_gpt4o_wait_time = WaitTimeInSeconds(primary_proxy_service_info['gpt4o']['estimatedQueueTime'])
+                openai_gpt4o_keys = primary_proxy_service_info['gpt4o']['activeKeys']
             except:
-                openai_gpt4o_turbo_wait_time = 0
-                openai_gpt4o_turbo_keys = 0
+                openai_gpt4o_wait_time = 0
+                openai_gpt4o_keys = 0
             try:
                 openai_gpt4_turbo_wait_time = WaitTimeInSeconds(primary_proxy_service_info['gpt4-turbo']['estimatedQueueTime'])
                 openai_gpt4_turbo_keys = primary_proxy_service_info['gpt4-turbo']['activeKeys']
@@ -384,8 +384,8 @@ class LLM_Proxy:
                 google_gemini_keys  = 0
         except:
             print("Primary Proxy Down?")
-            openai_gpt4o_turbo_wait_time = 0
-            openai_gpt4o_turbo_keys = 0
+            openai_gpt4o_wait_time = 0
+            openai_gpt4o_keys = 0
             openai_gpt4_turbo_wait_time = 0
             openai_gpt4_turbo_keys = 0
             openai_gpt4_32k_wait_time = 0
