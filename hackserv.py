@@ -393,6 +393,9 @@ def main():
 
                 parts = text.split()
 
+                if len(parts) == 0:
+		            parts.append("")
+
                 messages = ""
                 message = ""
 
