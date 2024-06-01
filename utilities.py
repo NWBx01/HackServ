@@ -51,6 +51,9 @@ def parse_outgoing(message_prefix, message, maxLines, server):
     
     #message = message_prefix + "13 " + message
     
+    total_tildes = message.count('~')
+    total_underscores = message.count('_')
+    total_asterisks = message.count('*')
     total_asterisks = message.count('*')
     total_quotes = message.count("\"") + message.count("“") + message.count("”") + message.count("„") + message.count("«") + message.count("»") + message.count("‹") + message.count("›") +  message.count("《") + message.count("》") + message.count("〈") + message.count("〉") + message.count("⟪") + message.count("⟫") + message.count("⟨") + message.count("⟩") + message.count("「") + message.count("」") + message.count("『") + message.count("』")
     
@@ -89,6 +92,8 @@ def parse_outgoing(message_prefix, message, maxLines, server):
             
             asterisk_count = 0 #Replace pairs of asterisks (*) with IRC formatting characters
             quote_count = 0
+            underscore_count = 0
+            tilde_count = 0
             word_index = 0
             message_appended = False
             # Loops for the number of times necessary to break a line into multiples and correctly appends next messages where the last line ended
@@ -100,15 +105,50 @@ def parse_outgoing(message_prefix, message, maxLines, server):
                     
                     reconstructedWord = ""
                     for letter in words[word_index]:
+                        #Strikethrough; Red
+                        if letter == "~":
+                            if (total_tildes > 1):
+                                tilde_count += 1
+
+                                if words[word_index + 1] == "~":
+                                    if (tilde_count == 1):
+                                        reconstructedWord += chr(0x1E) + "4" + letter 
+                                    else:
+                                        reconstructedWord += letter + "13"
+                                        tilde_count = 0
+
+                        #Underline; Light blue
+                        if letter == "_":
+                            if (total_underscores > 1):
+                                underscore_count += 1
+
+                                if words[word_index + 1] == "_":
+                                    if (underscore_count == 1):
+                                        reconstructedWord += chr(0x1F) + "2" + letter 
+                                    else:
+                                        reconstructedWord += letter + "13"
+                                        underscore_count = 0
+
+                        #Bold; Dark Purple
+                        #Italics; Light green
                         if letter == "*":
                             if (total_asterisks > 1):
                                 asterisk_count += 1
-                                
-                                if (asterisk_count == 1):
-                                    reconstructedWord += chr(0x1D) + "9" + letter
+
+                                if words[word_index + 1] == "*":
+                                    if (asterisk_count == 1):
+                                        reconstructedWord += chr(0x02) + "6" + letter 
+                                    else:
+                                        reconstructedWord += letter + "13"
+                                        asterisk_count = 0
                                 else:
-                                    reconstructedWord += letter + "13"
-                                    asterisk_count = 0
+                                    if (asterisk_count == 1):
+                                        reconstructedWord += chr(0x1D) + "9" + letter
+                                    else:
+                                        reconstructedWord += letter + "13"
+                                        asterisk_count = 0
+
+                        #Quotes; Orange
                         elif ((letter == "\"") or (letter == "“") or (letter == "”") or (letter == "„") or (letter == "«") or (letter == "»") or (letter == "‹") or (letter == "›") or  (letter == "《") or (letter == "》") or (letter == "〈") or (letter == "〉") or (letter == "⟪") or (letter == "⟫") or (letter == "⟨") or (letter == "⟩") or (letter == "「") or (letter == "」") or (letter == "『") or (letter == "』")):
                             if (total_quotes > 1):
                                 quote_count += 1

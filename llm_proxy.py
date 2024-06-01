@@ -534,7 +534,7 @@ class LLM_Proxy:
             openai_gpt3_5_turbo_skip = False
             google_gemini_skip = False
         elif ((filePathUpload != "") and (skip_all == False)):
-            openai_gpt4o_skip = False
+            openai_gpt4o_skip = True
             openai_gpt4_turbo_skip = False
             azure_gpt4_turbo_skip = False
             openai_gpt4_32k_skip = True
