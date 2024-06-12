@@ -51,30 +51,23 @@ def parse_outgoing(message_prefix, message, maxLines, server):
     
     #message = message_prefix + "13 " + message
     
-    total_tildes = message.count('~')
-    total_underscores = message.count('_')
-    total_asterisks = message.count('*')
-    total_asterisks = message.count('*')
-    total_quotes = message.count("\"") + message.count("“") + message.count("”") + message.count("„") + message.count("«") + message.count("»") + message.count("‹") + message.count("›") +  message.count("《") + message.count("》") + message.count("〈") + message.count("〉") + message.count("⟪") + message.count("⟫") + message.count("⟨") + message.count("⟩") + message.count("「") + message.count("」") + message.count("『") + message.count("』")
-    
     message = message.replace("\\\"", "\"")
     message = message.replace("\\\'", "\'")
     message = message.replace("\\n", "\n")
-    lines = message.split("\n")
 
     messages = []
     tempLines = []
-    
+
     truncated_prompt = [] # This is for messages that extend past the maximum amount of lines and get truncated.
     truncated = False
-    
+
     # Remove lines that are blank, this ensures that len(lines) returns the actual number of printable lines.
     for line in lines:
         if (line != ""):
             tempLines.append(line)
-    
+
     lines = tempLines
-    
+
     if (server == "irc.sageru.org"):
         maxCharsPerLine = 500
     elif (server == "irc.rizon.net"):
@@ -90,76 +83,123 @@ def parse_outgoing(message_prefix, message, maxLines, server):
             else:
                 current_message = message_prefix + "13 "
             
-            asterisk_count = 0 #Replace pairs of asterisks (*) with IRC formatting characters
-            quote_count = 0
-            underscore_count = 0
-            tilde_count = 0
+            total_double_tildes = line.count('~~')
+            total_double_underscores = line.count('__')
+            total_triple_asterisks = line.count('***')
+            total_double_asterisks = line.count('**') - total_triple_asterisks
+            total_asterisks = line.count('*') - total_double_asterisks - total_triple_asterisks
+            total_quotes = line.count("\"") + line.count("“") + line.count("”") + line.count("„") + line.count("«") + line.count("»") + line.count("‹") + line.count("›") +  line.count("《") + line.count("》") + line.count("〈") + line.count("〉") + line.count("⟪") + line.count("⟫") + line.count("⟨") + line.count("⟩") + line.count("「") + line.count("」") + line.count("『") + line.count("』")
+            
+            strikethrough = False
+            underline = False
+            bold = False
+            italics = False
+            bold_italics = False
+            quote = False
+            
             word_index = 0
             message_appended = False
             # Loops for the number of times necessary to break a line into multiples and correctly appends next messages where the last line ended
-            for i in range((len(line) + maxCharsPerLine - 1) // maxCharsPerLine):        
+            for i in range((len(line) + maxCharsPerLine - 1) // maxCharsPerLine):
                 while word_index < len(words):
                     if (lineCounter >= maxLines):
                         truncated = True
                         lineCounter = 0
                     
                     reconstructedWord = ""
-                    for letter in words[word_index]:
-                        #Strikethrough; Red
+
+                    letter_index = 0
+                    current_word = words[word_index]
+                    while letter_index < len(current_word):
+                        letter = current_word[letter_index]
+                        #Strikethrough; Red | ~~
                         if letter == "~":
-                            if (total_tildes > 1):
-                                tilde_count += 1
-
-                                if words[word_index + 1] == "~":
-                                    if (tilde_count == 1):
-                                        reconstructedWord += chr(0x1E) + "4" + letter 
+                            if letter_index + 1 < len(current_word) and current_word[letter_index:letter_index+2] == '~~':
+                                if total_double_tildes > 1:
+                                    if not strikethrough:
+                                        reconstructedWord += chr(0x1E) + "4" + letter + letter
+                                        strikethrough = True
                                     else:
-                                        reconstructedWord += letter + "13"
-                                        tilde_count = 0
-
-                        #Underline; Light blue
-                        if letter == "_":
-                            if (total_underscores > 1):
-                                underscore_count += 1
-
-                                if words[word_index + 1] == "_":
-                                    if (underscore_count == 1):
-                                        reconstructedWord += chr(0x1F) + "2" + letter 
-                                    else:
-                                        reconstructedWord += letter + "13"
-                                        underscore_count = 0
-
-                        #Bold; Dark Purple
-                        #Italics; Light green
-                        if letter == "*":
-                            if (total_asterisks > 1):
-                                asterisk_count += 1
-
-                                if words[word_index + 1] == "*":
-                                    if (asterisk_count == 1):
-                                        reconstructedWord += chr(0x02) + "6" + letter 
-                                    else:
-                                        reconstructedWord += letter + "13"
-                                        asterisk_count = 0
+                                        reconstructedWord += letter + letter + "13"
+                                        strikethrough = False
+                                    letter_index += 1
                                 else:
-                                    if (asterisk_count == 1):
-                                        reconstructedWord += chr(0x1D) + "9" + letter
+                                    reconstructedWord += letter + letter
+                                    letter_index += 1
+                            else:
+                                reconstructedWord += letter
+
+                        #Underline; Light blue | __
+                        elif letter == "_":
+                            if letter_index + 1 < len(current_word) and current_word[letter_index:letter_index+2] == '__':
+                                if total_double_underscores > 1:
+                                    if not underline:
+                                        reconstructedWord += chr(0x1F) + "2" + letter + letter
+                                        underline = True
                                     else:
-                                        reconstructedWord += letter + "13"
-                                        asterisk_count = 0
+                                        reconstructedWord += letter + letter + "13"
+                                        underline = False
+                                    letter_index += 1
+                                else:
+                                    reconstructedWord += letter + letter
+                                    letter_index += 1
+                            else:
+                                reconstructedWord += letter
+
+                        #Bold; Dark Purple | **
+                        #Italics; Light green | *
+                        elif letter == "*":
+                            if letter_index + 2 < len(current_word) and current_word[letter_index:letter_index+3] == '***':
+                                if total_triple_asterisks > 1:
+                                    if not bold_italics:
+                                        reconstructedWord += chr(0x1D) + chr(0x02) + "10" + letter + letter + letter
+                                        bold_italics = True
+                                    else:
+                                        reconstructedWord += letter + letter + letter + "13"
+                                        bold_italics = False
+                                    letter_index += 2
+                                else:
+                                    reconstructedWord += letter + letter + letter
+                                    letter_index += 2
+                            elif letter_index + 1 < len(current_word) and current_word[letter_index:letter_index+2] == '**':
+                                if total_double_asterisks > 1:
+                                    if not bold and not bold_italics:
+                                        reconstructedWord += chr(0x02) + "6" + letter + letter
+                                        bold = True
+                                    else:
+                                        reconstructedWord += letter + letter + "13"
+                                        bold = False
+                                    letter_index += 1
+                                else:
+                                    reconstructedWord += letter + letter
+                                    letter_index += 1
+                            elif total_asterisks > 1:
+                                if not italics and not bold_italics:
+                                    reconstructedWord += chr(0x1D) + "9" + letter
+                                    italics = True
+                                else:
+                                    reconstructedWord += letter + "13"
+                                    italics = False
+                            else:
+                                reconstructedWord += letter
+                            
 
                         #Quotes; Orange
                         elif ((letter == "\"") or (letter == "“") or (letter == "”") or (letter == "„") or (letter == "«") or (letter == "»") or (letter == "‹") or (letter == "›") or  (letter == "《") or (letter == "》") or (letter == "〈") or (letter == "〉") or (letter == "⟪") or (letter == "⟫") or (letter == "⟨") or (letter == "⟩") or (letter == "「") or (letter == "」") or (letter == "『") or (letter == "』")):
-                            if (total_quotes > 1):
-                                quote_count += 1
-                                
-                                if (quote_count == 1):
+                            if total_quotes > 1:
+                                if not quote:
                                     reconstructedWord += "7" + letter
+                                    quote = True
                                 else:
                                     reconstructedWord += letter + "13"
-                                    quote_count = 0
+                                    quote = False
+                            else:
+                                reconstructedWord += letter
+
                         else:
                             reconstructedWord += letter
+
+                        letter_index += 1
                     
                     if (len(current_message) + len(reconstructedWord) + 1 <= maxCharsPerLine):
                         current_message += reconstructedWord + " "
@@ -201,7 +241,7 @@ def parse_outgoing(message_prefix, message, maxLines, server):
             if (lineCounter >= maxLines):
                 truncated = True
                 lineCounter = 0
-    
+
     if (truncated == True) and (truncated_prompt != []) and (str(truncated_prompt) != "") and (str(truncated_prompt) != "13") and (str(truncated_prompt) != "7") and (str(truncated_prompt) != chr(0x1D) + "14"):
         messages.append("7Too many lines! Stopping. Use !resume to continue response.")
         
