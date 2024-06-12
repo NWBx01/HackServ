@@ -54,6 +54,7 @@ def parse_outgoing(message_prefix, message, maxLines, server):
     message = message.replace("\\\"", "\"")
     message = message.replace("\\\'", "\'")
     message = message.replace("\\n", "\n")
+    lines = message.split("\n")
 
     messages = []
     tempLines = []
