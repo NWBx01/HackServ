@@ -39,6 +39,7 @@ import nmap
 import time
 import uuid
 import shlex
+import queue
 import shutil
 import base64
 import random
@@ -89,7 +90,7 @@ if (otakuchan_status == True):
 ################## IRC Stuff Here #####################
 #######################################################
 
-message_queue = []
+message_queue = queue.Queue()
 
 def ircsend(msg):
     ircsock.send(bytes(str(msg) +"\n", "UTF-8")) # Send data to IRC server.
@@ -240,6 +241,8 @@ def ping_server():
             if (time.time() - lastpingsent) >= 15:
                 sendping()
                 lastpingsent = time.time()
+            else:
+                time.sleep(5)
     except:
         connected = False
         reconnect()
@@ -252,7 +255,7 @@ def irc_receive():
         ircmsg = ircmsg.strip('\n\r')
 
         if ircmsg:
-            message_queue.append(ircmsg)
+            message_queue.put(ircmsg)
 
             if debugmode: # If debugmode is True, msgs will print to screen.
                 if ircmsg.find("PONG") == -1:
@@ -263,6 +266,8 @@ def irc_receive():
                 print('Disconnected from server')
             connected = False
             reconnect()
+            
+        time.sleep(0.25)
 
 # This is the main function for all of the bot controls.
 def main():
@@ -272,8 +277,8 @@ def main():
     global lastpingreceived
     global lastpingsent
     while connected:
-        if message_queue: 
-            ircmsg = message_queue.pop(0)
+        if not message_queue.empty(): 
+            ircmsg = message_queue.get()
         
             # SASL Authentication.
             if ircmsg.find("ACK :sasl") != -1:
@@ -510,6 +515,9 @@ def main():
                             print('PING time exceeded threshold')
                         connected = False
                         reconnect()
+                        
+        else:
+            time.sleep(0.25)
                 
 try: # Here is where we actually start the Bot.
     if not connected:
