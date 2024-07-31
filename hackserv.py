@@ -266,8 +266,6 @@ def irc_receive():
                 print('Disconnected from server')
             connected = False
             reconnect()
-            
-        time.sleep(0.25)
 
 # This is the main function for all of the bot controls.
 def main():

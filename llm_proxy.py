@@ -297,7 +297,7 @@ class LLM_Proxy:
             'Alt-Used': primary_proxy_url,
             'Cache-Control': "no-cache",
             'Connection': "keep-alive",
-            'Cookie': "csrf=4d28e4e4310a078c53219a651b9104cfcd865bdea3dcaad16bdcb1dfabf0b6a1; connect.sid=s%3AaZbKvymEW6QclKHAR5GYwc10qGE96smL.IRph3RhWPvbOj5xFB4JibaisPluUg8ieQ3p1fEA14GA",
+            'Cookie': "733328ba3eb11a4759ccebff523d62c7f63e90a15beb49d218c68db23a339e30; connect.sid=s%3AKhfFZCmNDMOy6d3IXcu3lCVHUVWxDdTP.8LP%2FC7%2FTjpsVQhjgWLGPtv4nD1zkECRdwMJaOcZhO%2BU",
             'DNT': "1",
             'Host': primary_proxy_url,
             'Pragma': "no-cache",
@@ -321,65 +321,95 @@ class LLM_Proxy:
 
             proxy_key = primary_proxy_key
 
-            openai_endpoint_url = primary_proxy_service_info['endpoints']['openai']
             try:
-                openai_gpt4o_wait_time = WaitTimeInSeconds(primary_proxy_service_info['gpt4o']['estimatedQueueTime'])
-                openai_gpt4o_keys = primary_proxy_service_info['gpt4o']['activeKeys']
+                openai_endpoint_url = primary_proxy_service_info['endpoints']['openai']
+                try:
+                    openai_gpt4o_wait_time = WaitTimeInSeconds(primary_proxy_service_info['gpt4o']['estimatedQueueTime'])
+                    openai_gpt4o_keys = primary_proxy_service_info['gpt4o']['activeKeys']
+                except:
+                    openai_gpt4o_wait_time = 0
+                    openai_gpt4o_keys = 0
+                try:
+                    openai_gpt4_turbo_wait_time = WaitTimeInSeconds(primary_proxy_service_info['gpt4-turbo']['estimatedQueueTime'])
+                    openai_gpt4_turbo_keys = primary_proxy_service_info['gpt4-turbo']['activeKeys']
+                except:
+                    openai_gpt4_turbo_wait_time = 0
+                    openai_gpt4_turbo_keys = 0
+                try:
+                    openai_gpt4_32k_wait_time = WaitTimeInSeconds(primary_proxy_service_info['gpt4-32k']['estimatedQueueTime'])
+                    openai_gpt4_32k_keys = primary_proxy_service_info['gpt4-32k']['activeKeys']
+                except:
+                    openai_gpt4_32k_wait_time = 0
+                    openai_gpt4_32k_keys = 0
+                try:
+                    openai_gpt3_5_turbo_wait_time = WaitTimeInSeconds(primary_proxy_service_info['turbo']['estimatedQueueTime'])
+                    openai_gpt3_5_turbo_keys = primary_proxy_service_info['turbo']['activeKeys']
+                except:
+                    openai_gpt3_5_turbo_wait_time = 0
+                    openai_gpt3_5_turbo_keys = 0
             except:
+                print("OpenAI endpoint not available")
                 openai_gpt4o_wait_time = 0
                 openai_gpt4o_keys = 0
-            try:
-                openai_gpt4_turbo_wait_time = WaitTimeInSeconds(primary_proxy_service_info['gpt4-turbo']['estimatedQueueTime'])
-                openai_gpt4_turbo_keys = primary_proxy_service_info['gpt4-turbo']['activeKeys']
-            except:
                 openai_gpt4_turbo_wait_time = 0
                 openai_gpt4_turbo_keys = 0
-            try:
-                openai_gpt4_32k_wait_time = WaitTimeInSeconds(primary_proxy_service_info['gpt4-32k']['estimatedQueueTime'])
-                openai_gpt4_32k_keys = primary_proxy_service_info['gpt4-32k']['activeKeys']
-            except:
                 openai_gpt4_32k_wait_time = 0
                 openai_gpt4_32k_keys = 0
-            try:
-                openai_gpt3_5_turbo_wait_time = WaitTimeInSeconds(primary_proxy_service_info['turbo']['estimatedQueueTime'])
-                openai_gpt3_5_turbo_keys = primary_proxy_service_info['turbo']['activeKeys']
-            except:
                 openai_gpt3_5_turbo_wait_time = 0
                 openai_gpt3_5_turbo_keys = 0
 
-            aws_endpoint_url = primary_proxy_service_info['endpoints']['aws']
             try:
-                aws_claude_sonnet_wait_time = WaitTimeInSeconds(primary_proxy_service_info['claude-opus']['estimatedQueueTime'])
-                aws_claude_sonnet_keys  = primary_proxy_service_info['claude-opus']['activeKeys']
+                aws_endpoint_url = primary_proxy_service_info['endpoints']['aws']
+                try:
+                    aws_claude_sonnet_wait_time = WaitTimeInSeconds(primary_proxy_service_info['claude-opus']['estimatedQueueTime'])
+                    aws_claude_sonnet_keys  = primary_proxy_service_info['claude-opus']['activeKeys']
+                except:
+                    aws_claude_sonnet_wait_time = 0
+                    aws_claude_sonnet_keys  = 0
+                try:
+                    aws_claude_wait_time = WaitTimeInSeconds(primary_proxy_service_info['aws-claude']['estimatedQueueTime'])
+                    aws_claude_keys  = primary_proxy_service_info['aws-claude']['activeKeys']
+                except:
+                    aws_claude_wait_time = 0
+                    aws_claude_keys  = 0
             except:
+                print("AWS endpoint not available")
                 aws_claude_sonnet_wait_time = 0
                 aws_claude_sonnet_keys  = 0
-            try:
-                aws_claude_wait_time = WaitTimeInSeconds(primary_proxy_service_info['aws-claude']['estimatedQueueTime'])
-                aws_claude_keys  = primary_proxy_service_info['aws-claude']['activeKeys']
-            except:
                 aws_claude_wait_time = 0
                 aws_claude_keys  = 0
 
-            azure_endpoint_url = primary_proxy_service_info['endpoints']['azure']
             try:
-                azure_gpt4_turbo_wait_time = WaitTimeInSeconds(primary_proxy_service_info['azure-gpt4-turbo']['estimatedQueueTime'])
-                azure_gpt4_turbo_keys = primary_proxy_service_info['azure-gpt4-turbo']['activeKeys']
+                azure_endpoint_url = primary_proxy_service_info['endpoints']['azure']
+                try:
+                    azure_gpt4_turbo_wait_time = WaitTimeInSeconds(primary_proxy_service_info['azure-gpt4-turbo']['estimatedQueueTime'])
+                    azure_gpt4_turbo_keys = primary_proxy_service_info['azure-gpt4-turbo']['activeKeys']
+                except:
+                    azure_gpt4_turbo_wait_time = 0
+                    azure_gpt4_turbo_keys = 0
+                try:
+                    azure_gpt4_32k_wait_time = WaitTimeInSeconds(primary_proxy_service_info['azure-gpt4-32k']['estimatedQueueTime'])
+                    azure_gpt4_32k_keys = primary_proxy_service_info['azure-gpt4-32k']['activeKeys']
+                except:
+                    azure_gpt4_32k_wait_time = 0
+                    azure_gpt4_32k_keys = 0
             except:
+                print("Azure endpoint not available")
                 azure_gpt4_turbo_wait_time = 0
                 azure_gpt4_turbo_keys = 0
-            try:
-                azure_gpt4_32k_wait_time = WaitTimeInSeconds(primary_proxy_service_info['azure-gpt4-32k']['estimatedQueueTime'])
-                azure_gpt4_32k_keys = primary_proxy_service_info['azure-gpt4-32k']['activeKeys']
-            except:
                 azure_gpt4_32k_wait_time = 0
                 azure_gpt4_32k_keys = 0
             
-            google_endpoint_url = primary_proxy_service_info['endpoints']['google-ai']
             try:
-                google_gemini_wait_time = WaitTimeInSeconds(primary_proxy_service_info['gemini-pro']['estimatedQueueTime'])
-                google_gemini_keys  = primary_proxy_service_info['gemini-pro']['activeKeys']
+                google_endpoint_url = primary_proxy_service_info['endpoints']['google-ai']
+                try:
+                    google_gemini_wait_time = WaitTimeInSeconds(primary_proxy_service_info['gemini-pro']['estimatedQueueTime'])
+                    google_gemini_keys  = primary_proxy_service_info['gemini-pro']['activeKeys']
+                except:
+                    google_gemini_wait_time = 0
+                    google_gemini_keys  = 0
             except:
+                print("Google endpoint not available")
                 google_gemini_wait_time = 0
                 google_gemini_keys  = 0
         except:
@@ -404,7 +434,7 @@ class LLM_Proxy:
                 'Alt-Used': secondary_proxy_url,
                 'Cache-Control': "no-cache",
                 'Connection': "keep-alive",
-                'Cookie': "connect.sid=s%3Ak9BzeJGz-EXOME9_rmYOsh5Q5or6-a9v.9LOKGnoWm5iplEJFi%2B5OdDWzpWfBa8ZyMqEbKQ5qTpY; csrf=071e55b6fe09560edb4f0c011681c93d4a5593c0611c15293298e3e4adf06eca",
+                'Cookie': "csrf=0243195cc8129d73c1c78af022ebbbea9bba8dbf0a7d2de8b32eae41e8c2b0a1; connect.sid=s%3AruzXdOV9neY1TRhI9-WG82CXn4vSSa-B.sJYWVNkQZb7sbzph96f3BDMlbDJHq1%2FHkh5h6mjlUz0",
                 'DNT': "1",
                 'Host': secondary_proxy_url,
                 'Pragma': "no-cache",
@@ -428,39 +458,58 @@ class LLM_Proxy:
 
                 proxy_key = secondary_proxy_key
 
-                aws_endpoint_url = secondary_proxy_service_info['endpoints']['aws']
                 try:
-                    aws_claude_sonnet_wait_time = WaitTimeInSeconds(secondary_proxy_service_info['aws-claude']['estimatedQueueTime'])
-                    aws_claude_sonnet_keys = secondary_proxy_service_info['aws-claude']['sonnetKeys']
+                    aws_endpoint_url = secondary_proxy_service_info['endpoints']['aws']
+                    try:
+                        aws_claude_sonnet_wait_time = WaitTimeInSeconds(secondary_proxy_service_info['aws-claude']['estimatedQueueTime'])
+                        aws_claude_sonnet_keys = secondary_proxy_service_info['aws-claude']['sonnetKeys']
+                    except:
+                        aws_claude_sonnet_wait_time = 0
+                        aws_claude_sonnet_keys  = 0
+                    try:
+                        aws_claude_wait_time = WaitTimeInSeconds(secondary_proxy_service_info['aws-claude']['estimatedQueueTime'])
+                        aws_claude_keys = secondary_proxy_service_info['aws-claude']['activeKeys']
+                    except:
+                        aws_claude_wait_time = 0
+                        aws_claude_keys = 0
                 except:
+                    print("AWS endpoint not available")
                     aws_claude_sonnet_wait_time = 0
                     aws_claude_sonnet_keys  = 0
-                try:
-                    aws_claude_wait_time = WaitTimeInSeconds(secondary_proxy_service_info['aws-claude']['estimatedQueueTime'])
-                    aws_claude_keys = secondary_proxy_service_info['aws-claude']['activeKeys']
-                except:
                     aws_claude_wait_time = 0
                     aws_claude_keys = 0
-
-                azure_endpoint_url = secondary_proxy_service_info['endpoints']['azure']
+                
                 try:
-                    azure_gpt4_turbo_wait_time = WaitTimeInSeconds(secondary_proxy_service_info['azure-gpt4-turbo']['estimatedQueueTime'])
-                    azure_gpt4_turbo_keys = secondary_proxy_service_info['azure-gpt4-turbo']['activeKeys']
+                    azure_endpoint_url = secondary_proxy_service_info['endpoints']['azure']
+                    try:
+                        azure_gpt4_turbo_wait_time = WaitTimeInSeconds(secondary_proxy_service_info['azure-gpt4-turbo']['estimatedQueueTime'])
+                        azure_gpt4_turbo_keys = secondary_proxy_service_info['azure-gpt4-turbo']['activeKeys']
+                    except:
+                        azure_gpt4_turbo_wait_time = 0
+                        azure_gpt4_turbo_keys = 0
+                    try:
+                        azure_gpt4_32k_wait_time = WaitTimeInSeconds(secondary_proxy_service_info['azure-gpt4-32k']['estimatedQueueTime'])
+                        azure_gpt4_32k_keys = secondary_proxy_service_info['azure-gpt4-32k']['activeKeys']
+                    except:
+                        azure_gpt4_32k_wait_time = 0
+                        azure_gpt4_32k_keys = 0
                 except:
+                    print("Azure endpoint not available")
                     azure_gpt4_turbo_wait_time = 0
                     azure_gpt4_turbo_keys = 0
-                try:
-                    azure_gpt4_32k_wait_time = WaitTimeInSeconds(secondary_proxy_service_info['azure-gpt4-32k']['estimatedQueueTime'])
-                    azure_gpt4_32k_keys = secondary_proxy_service_info['azure-gpt4-32k']['activeKeys']
-                except:
                     azure_gpt4_32k_wait_time = 0
                     azure_gpt4_32k_keys = 0
                 
-                google_endpoint_url = secondary_proxy_service_info['endpoints']['google-ai']
                 try:
-                    google_gemini_wait_time = WaitTimeInSeconds(secondary_proxy_service_info['gemini-pro']['estimatedQueueTime'])
-                    google_gemini_keys  = secondary_proxy_service_info['gemini-pro']['activeKeys']
+                    google_endpoint_url = secondary_proxy_service_info['endpoints']['google-ai']
+                    try:
+                        google_gemini_wait_time = WaitTimeInSeconds(secondary_proxy_service_info['gemini-pro']['estimatedQueueTime'])
+                        google_gemini_keys  = secondary_proxy_service_info['gemini-pro']['activeKeys']
+                    except:
+                        google_gemini_wait_time = 0
+                        google_gemini_keys  = 0
                 except:
+                    print("Google endpoint not available")
                     google_gemini_wait_time = 0
                     google_gemini_keys  = 0
             except:
